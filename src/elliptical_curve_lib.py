@@ -4,7 +4,7 @@ This is a self-made library for anything involving eliptical curves
 
 from modular_arithmetic_lib import pow_reimplemented
 from dataclasses import dataclass
-
+from random import SystemRandom
 
 @dataclass
 class Point:
@@ -58,15 +58,29 @@ def add_points(P: Point, Q: Point, curve: Curve) -> Point:
 def multiply_point(P: Point, n: int, curve: Curve) -> Point:
     """
     Multiplies an eliptical curve point by a scalar value n
+
+    This is done by the double and add method
     """
 
-    base = P
+    base = Point(P.x, P.y)
+    copy = None
 
-    while n != 0:
+    while n > 0:
         if n % 2 == 0:
-            base = add_points(base, base, curve.a, curve.modulo)
+            base = add_points(base, base, curve)
+            n = n // 2
         else:
-            P = add_points(base, P, curve.a, curve.modulo)
+            copy = add_points(base, copy, curve)
+            n -= 1
+
+    return copy
+
+def create_random_curve(modulo):
+    cryptogen = SystemRandom()
+    a = cryptogen.randrange(100, 1000000)
+    b = cryptogen.randrange(100, 1000000)
+    return Curve(a, b, modulo)
+    
 
 
 if __name__ == "__main__":
@@ -78,3 +92,7 @@ if __name__ == "__main__":
     assert result != None
     assert result.x == 3
     assert result.y == 1
+
+    result = multiply_point(point1, 2, curve)
+    assert result.x == 3
+    assert result.y == 6
