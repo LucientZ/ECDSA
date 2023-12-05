@@ -3,9 +3,23 @@ This is a self-made library for anything involving eliptical curves
 """
 
 from modular_arithmetic_lib import pow_reimplemented
+from dataclasses import dataclass
 
 
-def add_points(P: (int, int), Q: (int, int), a: int, modulo: int = None) -> (int, int):
+@dataclass
+class Point:
+    x: int
+    y: int
+
+
+@dataclass
+class Curve:
+    a: int  # Coefficient of x^1
+    b: int  # Coefficient of x^0
+    modulo: int  # Modular space
+
+
+def add_points(P: Point, Q: Point, curve: Curve) -> Point:
     """
     This function implements adding two points together on an eliptic curve.
     None is used to represent the point at infinity
@@ -15,29 +29,52 @@ def add_points(P: (int, int), Q: (int, int), a: int, modulo: int = None) -> (int
     elif Q == None:
         return P
 
-    if (P[0] == Q[0]) and ((P[1] == -Q[1]) or (P[1] != Q[1])):
+    if (P.x == Q.x) and ((P.y == -Q.y) or (P.y != Q.y)):
         return None
 
     m = 1
 
-    if modulo == None:
-        if P[0] != Q[0]:
-            m = (Q[1] - P[1]) / (Q[0] - P[0])
-        elif P[1] == Q[1]:
-            m = (3 * (P[0] ** 2) + a) / (2 * P[1])
+    if curve.modulo == None:
+        if P.x != Q.x:
+            m = (Q.y - P.y) / (Q.x - P.x)
+        elif P.y == Q.y:
+            m = (3 * (P.x**2) + curve.a) / (2 * P.y)
     else:
         # If in a field, we can't just divide normally
-        if P[0] != Q[0]:
-            m = ((Q[1] - P[1]) * pow_reimplemented(Q[0] - P[0], -1, modulo)) % modulo
-        elif P[1] == Q[1]:
-            m = (
-                (3 * (P[0] ** 2) + a) * pow_reimplemented((2 * P[1]), -1, modulo)
-            ) % modulo
+        if P.x != Q.x:
+            m = ((Q.y - P.y) * pow_reimplemented(Q.x - P.x, -1, curve.modulo)) % curve.modulo
+        elif P.y == Q.y:
+            m = ((3 * (P.x**2) + curve.a)* pow_reimplemented((2 * P.y), -1, curve.modulo)) % curve.modulo
 
-    x_3 = m**2 - P[0] - Q[0]
-    y_3 = m * (P[0] - x_3) - P[1]
+    x_3 = m**2 - P.x - Q.x
+    y_3 = m * (P.x - x_3) - P.y
 
-    if modulo == None:
-        return (x_3, y_3)
+    if curve.modulo == None:
+        return Point(x_3, y_3)
     else:
-        return (x_3 % modulo, y_3 % modulo)
+        return Point(x_3 % curve.modulo, y_3 % curve.modulo)
+
+
+def multiply_point(P: Point, n: int, curve: Curve) -> Point:
+    """
+    Multiplies an eliptical curve point by a scalar value n
+    """
+
+    base = P
+
+    while n != 0:
+        if n % 2 == 0:
+            base = add_points(base, base, curve.a, curve.modulo)
+        else:
+            P = add_points(base, P, curve.a, curve.modulo)
+
+
+if __name__ == "__main__":
+    point1 = Point(2, 1)
+    point2 = Point(6, 0)
+    curve = Curve(2, 0, 7)
+
+    result = add_points(point1, point2, curve)
+    assert result != None
+    assert result.x == 3
+    assert result.y == 1

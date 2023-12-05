@@ -76,7 +76,11 @@ def pow_reimplemented(base: int, exp: int, mod: int = None) -> int:
     else:
         inverse = 1
         if exp < 0:
-            inverse = modular_inverse(base, mod)
             exp *= -1
-        return (base**exp * inverse) % mod
+            return modular_inverse(base**exp, mod)
+        return (base**exp) % mod
+    
+if __name__ == "__main__":
+    for i in range():
+        assert pow_reimplemented(i, -1, 7) == pow(i, -1, 7)
 
