@@ -75,12 +75,11 @@ def multiply_point(P: Point, n: int, curve: Curve) -> Point:
 
     return copy
 
-def create_random_curve(modulo):
+def create_random_curve(modulo: int) -> Curve:
     cryptogen = SystemRandom()
     a = cryptogen.randrange(100, 1000000)
     b = cryptogen.randrange(100, 1000000)
     return Curve(a, b, modulo)
-    
 
 
 if __name__ == "__main__":
